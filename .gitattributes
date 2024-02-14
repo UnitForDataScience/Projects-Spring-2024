@@ -1,1 +1,2 @@
 creditcard.csv filter=lfs diff=lfs merge=lfs -text
+/Users/namigabbasov/Desktop/Projects/creditcard.csv filter=lfs diff=lfs merge=lfs -text
