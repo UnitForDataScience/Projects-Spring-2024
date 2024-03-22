@@ -1,0 +1,121 @@
+---
+title: "Breast Cancer"
+output: html_document
+date: "2024-02-23"
+---
+```{r}
+# import data
+library(readr)
+# setwd("/Users/namigabbasov/Desktop/Projects-Spring-2024")
+breast_cancer <- read_csv("https://raw.githubusercontent.com/UnitForDataScience/Projects-Spring-2024/main/Breast%20Cancer/breast_cancer.csv")
+```
+```{r}
+library(stargazer)
+library(car)
+library(carData)
+```
+
+
+## Statistical Inference: Logistic Regression
+```{r}
+
+
+m1<- glm(Diagnosis~ radius1, family = binomial, data = breast_cancer)
+m2<- glm(formula = Diagnosis~ texture1, family = binomial, data = breast_cancer)
+m3<- glm(formula = Diagnosis~ perimeter1, family = binomial, data = breast_cancer)
+m4<- glm(formula = Diagnosis~ area1, family = binomial, data = breast_cancer)
+m5<- glm(formula = Diagnosis~ smoothness1, family = binomial, data = breast_cancer)
+m6<- glm(formula = Diagnosis~ compactness1, family = binomial, data = breast_cancer)
+m7<- glm(formula = Diagnosis~ concavity1, family = binomial, data = breast_cancer)
+m8<- glm(formula = Diagnosis~ concave_points1, family = binomial, data = breast_cancer)
+m9<- glm(formula = Diagnosis~ symmetry1, family = binomial, data = breast_cancer)
+m10<- glm(formula = Diagnosis~ fractal_dimension1, family = binomial, data = breast_cancer)
+m11<- glm(formula = Diagnosis~ texture1 + area1+smoothness1+ compactness1+ concavity1+ concave_points1+symmetry1, family = binomial, data = breast_cancer)
+
+
+stargazer(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11,  type = "text")
+
+
+vif(m11)
+
+cor.test(breast_cancer$radius1, breast_cancer$area1)
+```
+## Predicted Probabilities
+```{r}
+### Here I have used only one variable. You can update codes accordingly for other variables.
+
+
+preds<- glm(formula = Diagnosis~ texture1 + area1+smoothness1+ compactness1+ concavity1+ concave_points1+symmetry1, family = binomial, data = breast_cancer)
+
+
+
+
+mean_area1 <- mean(breast_cancer$area1, na.rm = TRUE)
+mean_smoothness1 <- mean(breast_cancer$smoothness1, na.rm = TRUE)
+mean_compactness1 <- mean(breast_cancer$compactness1, na.rm = TRUE)
+mean_concavity1 <- mean(breast_cancer$concavity1, na.rm = TRUE)
+mean_concave_points1 <- mean(breast_cancer$concave_points1, na.rm = TRUE)
+mean_symmetry1 <- mean(breast_cancer$symmetry1, na.rm = TRUE)
+
+
+
+new_data <- data.frame(
+  texture1 = seq(from = min(breast_cancer$texture1, na.rm = TRUE), 
+                 to = max(breast_cancer$texture1, na.rm = TRUE), length.out = 100),
+  area1 = mean_area1,
+  smoothness1 = mean_smoothness1,
+  compactness1 = mean_compactness1,
+  concavity1 = mean_concavity1,
+  concave_points1 = mean_concave_points1,
+  symmetry1 = mean_symmetry1
+)
+
+
+
+
+new_data$predicted_prob <- predict(preds, newdata = new_data, type = "response")
+
+
+
+plot(new_data$texture1, new_data$predicted_prob, type = 'l', 
+     xlab = "Texture1", ylab = "Predicted Probability of Positive Diagnosis",
+     main = "Predicted Probability vs. Texture1")
+```
+
+
+```{r}
+library(margins)
+
+# model
+preds <- glm(formula = Diagnosis ~ texture1 + area1 + smoothness1 + compactness1 + concavity1 + concave_points1 + symmetry1, family = binomial, data = breast_cancer)
+
+
+m <- margins(preds)
+summary_m <- summary(m)
+print(summary_m)
+texture1_marg_eff <- summary_m$dydx["texture1"]
+print(texture1_marg_eff)
+```
+```{r}
+library(sjPlot)
+plot_model(preds, type = "pred")
+```
+## Possible Interaction Terms 
+```{r}
+#install.packages("interactions")
+library(jtools)
+library(interactions) 
+
+### This is just an R syntax to plot interaction terms. You should make sure model if correctly specified and there is no multicoliniarity. 
+
+
+inter<- glm(formula = Diagnosis ~ texture1*symmetry1+area1+smoothness1+compactness1+concavity1+concave_points1, family = binomial, data = breast_cancer)
+vif(preds)
+stargazer(preds, type="text")
+interact_plot(inter, pred = texture1, modx = symmetry1)
+```
+
+
+
+
+
